@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 scriptPath_file=$(dirname "${BASH_SOURCE[0]}")
 scriptPath_folder=$(realpath "${scriptPath_file}")
