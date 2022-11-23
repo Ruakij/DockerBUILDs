@@ -7,11 +7,14 @@ utils_path="${scriptPath_folder}/utils"
 WORKDIR=${1:-$PWD}
 WORKDIR=$(realpath "$WORKDIR")
 
+# -- VARIABLES --
 # Store original path
 ORIGINALDIR=$PWD
 
 # Get args without path
 EXTRA_ARGS="${@:2}"
+
+TAG=${TAG:-"${TAG_PREFIX}${NAME}"}
 
 
 # Call prepare

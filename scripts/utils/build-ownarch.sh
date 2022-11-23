@@ -1,5 +1,4 @@
 #!/bin/bash
-TAG=${TAG:-"${TAG_PREFIX}${NAME}"}
 
 docker build \
 --tag $TAG:latest \
