@@ -25,5 +25,5 @@ https://github.com/imsnif/bandwhich
 
 ### 1.1.2. Example
 ```
-docker run --net host bandwhich -i eth0
+docker run -it --net host bandwhich -i eth0
 ```
