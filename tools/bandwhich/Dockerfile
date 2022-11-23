@@ -19,4 +19,4 @@ FROM base AS release
 # Copy build-target
 COPY --from=build /build/target/release/bandwhich .
 
-CMD ["./bandwhich"]
+ENTRYPOINT ["./bandwhich"]
