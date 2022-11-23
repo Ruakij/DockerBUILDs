@@ -10,10 +10,8 @@ WORKDIR /build
 RUN apk add --no-cache make libc-dev build-base
 # Copy sources
 ADD .build/repository/ .
-# Update dependencies
-RUN cargo update
-# Compile
-RUN TARGET="release" make
+# Update dependencies and Compile
+RUN cargo update && TARGET="release" make
 
 
 # ---- Release ----
