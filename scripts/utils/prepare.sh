@@ -18,7 +18,10 @@ alias git="git -C .build/repository"
 if ! [ -d .build/repository ]; then
     git clone "${GIT_REPOSITORY}" .build/repository
 else
-    git checkout -  # Checkout previous branch in case GIT_CHECKOUT was different
+    # Checkout default-branch in case GIT_CHECKOUT was different    
+    defaultBranch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+    git checkout "${defaultBranch}"     
+    
     git pull        # Get changes
 fi
 
