@@ -16,6 +16,14 @@ Collection of Dockerfiles created to build & pack various tools.
 
 ## 1.1. Bandwhich
 
+### 1.1.1. Source
 >This is a CLI utility for displaying current network utilization by process, connection and remote IP/hostname
 
-Source: https://github.com/imsnif/bandwhich
+https://github.com/imsnif/bandwhich
+
+<br>
+
+### 1.1.2. Example
+```
+docker run --net host bandwhich -i eth0
+```
