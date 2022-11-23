@@ -16,7 +16,7 @@ repositoryFolder="$WORKDIR/.build/repository"
 # --- SOURCES ---
 # Get sources locally
 if ! [ -d "$repositoryFolder" ]; then
-    git clone "${GIT_REPOSITORY}" .
+    git clone "${GIT_REPOSITORY}" "$repositoryFolder"
     cloned=True
 fi
 
