@@ -5,6 +5,7 @@ EXTRA_ARGS=${EXTRA_ARGS:-"$@"}
 
 docker buildx build \
 --platform $PLATFORM \
+--tag $TAG:latest \
 --tag "${TAG}:${VERSION}" \
 $EXTRA_ARGS \
 .
