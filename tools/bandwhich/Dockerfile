@@ -4,10 +4,10 @@ WORKDIR /app
 
 
 # ---- Build ----
-FROM rust:alpine AS build
+FROM rust:1.65.0-slim AS build
 WORKDIR /build
 # Install packages
-RUN apk add --no-cache make libc-dev build-base
+RUN apt update && apt install -y make
 # Copy sources
 ADD .build/repository/ .
 # Update dependencies and Compile
