@@ -19,5 +19,6 @@ RUN pip install --no-compile --no-cache-dir -e .
 
 # ---- Release ----
 FROM build AS release
+WORKDIR /videos
 
 ENTRYPOINT ["auto-editor"]
