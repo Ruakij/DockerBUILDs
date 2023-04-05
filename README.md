@@ -10,6 +10,7 @@ Collection of Dockerfiles created to build & pack various tools.
     - [1.1. CLI](#11-cli)
 - [2. Tools](#2-tools)
     - [2.1. Bandwhich](#21-bandwhich)
+    - [2.2. auto-editor](#22-auto-editor)
 <!-- /TOC -->
 
 <br>
@@ -57,3 +58,25 @@ https://github.com/imsnif/bandwhich
 ```
 docker run -it --net host bandwhich -i eth0
 ```
+
+<br>
+
+## 2.2. auto-editor
+
+### 2.2.1. Source
+>Auto-Editor is a command line application for automatically editing video and audio by analyzing a variety of methods, most notably audio loudness.
+
+https://github.com/WyattBlue/auto-editor
+
+<br>
+
+### 2.2.2. Example
+Speed-up silent part of videos:
+```
+docker run -v /home/ruakij/Videos:/video auto-build --no-open --silent-speed 8 --margin 0.2sec "input.webm" -o edited.mp4
+```
+
+<br>
+
+### 2.2.3. Comment
+TODO: Unfortunately the tool requires ffmpeg which is a huge tool and blows up the size of the image. I have to find a way to use a minimized version of it.
