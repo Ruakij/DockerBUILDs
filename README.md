@@ -11,6 +11,7 @@ Collection of Dockerfiles created to build & pack various tools.
 - [2. Tools](#2-tools)
     - [2.1. Bandwhich](#21-bandwhich)
     - [2.2. auto-editor](#22-auto-editor)
+    - [2.3. synapse-compress-state](#23-synapse-compress-state)
 <!-- /TOC -->
 
 <br>
@@ -80,3 +81,20 @@ docker run -v /home/ruakij/Videos:/video auto-build --no-open --silent-speed 8 -
 
 ### 2.2.3. Comment
 TODO: Unfortunately the tool requires ffmpeg which is a huge tool and blows up the size of the image. I have to find a way to use a minimized version of it.
+
+<br>
+
+## 2.3. synapse-compress-state
+Includes synapse_auto_compressor
+
+### 2.3.1. Source
+>This workspace contains experimental tools that attempt to reduce the number of rows in the state_groups_state table inside of a Synapse Postgresql database.
+
+https://github.com/matrix-org/rust-synapse-compress-state
+
+<br>
+
+### 2.3.2. Example
+```
+docker run --net container:synapse synapse-compress-state synapse_auto_compressor -p postgresql://synapse:synapse@127.0.0.1/synapse -c 500 -n 100
+```
