@@ -13,14 +13,20 @@ RUN apk add python3 musl-dev pkgconfig openssl-dev make
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 # Copy sources
 ADD .build/repository/ .
+
+FROM build AS build-synapse_compress-state
 # Update dependencies and Compile
 RUN cargo update && cargo build --release
+
+FROM build AS build-synapse_auto_compressor
+# Update dependencies and Compile
+RUN cd synapse_auto_compressor/ && cargo update && cargo build --release
 
 
 # ---- Release ----
 FROM base AS release
-# Copy build-target
-COPY --from=build /build/target/release/synapse_compress_state .
-COPY --from=build /build/target/release/synapse_auto_compressor .
+## Copy build-target
+COPY --from=build-synapse_compress-state /build/target/release/synapse_compress_state .
+COPY --from=build-synapse_auto_compressor /build/target/release/synapse_auto_compressor .
 
 ENTRYPOINT ["./synapse_compress_state"]
