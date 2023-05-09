@@ -34,7 +34,12 @@ You can add more tags or change the existing tag-naming-scheme using the environ
 
 <br>
 
-### 1.1.1. Environment-Variables
+### 1.1.1. Example
+`scripts/build.sh tools/bandwhich/`
+
+<br>
+
+### 1.1.2. Environment-Variables
 
 Variable    | Description                       | Default
 -|-|-
