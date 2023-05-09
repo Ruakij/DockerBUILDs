@@ -51,5 +51,5 @@ fi
 export VERSION
 printf "Version: ${VERSION}\n"
 
-TAG=${TAG:-"${TAG_PREFIX}${NAME}"}
+TAG=${TAG:-"${TAGPREFIX}${NAME}"}
 printf "> ${TAG}\n"
