@@ -18,7 +18,7 @@ Collection of Dockerfiles created to build & pack various tools.
 
 # 1. How to use
 
-Run the build-script `script/build.sh` with the path to the tool you want to build.
+Run the build-script `scripts/build.sh` with the path to the tool you want to build.
 
 <br>
 
@@ -30,7 +30,7 @@ You can add more tags or change the existing tag-naming-scheme using the environ
 
 ## 1.1. CLI
 
-`script/build.sh <toolPath> [extra-args for docker build ..]`
+`scripts/build.sh <toolPath> [extra-args for docker build ..]`
 
 <br>
 
