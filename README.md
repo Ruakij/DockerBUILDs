@@ -101,5 +101,5 @@ https://github.com/matrix-org/rust-synapse-compress-state
 
 ### 2.3.2. Example
 ```
-docker run --net container:synapse synapse-compress-state synapse_auto_compressor -p postgresql://synapse:synapse@127.0.0.1/synapse -c 500 -n 100
+docker run --net container:synapse ghcr.io/ruakij/dockerbuilds/synapse-compress-state:latest synapse_auto_compressor -p postgresql://synapse:synapse@127.0.0.1/synapse -c 500 -n 100
 ```
