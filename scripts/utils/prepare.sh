@@ -1,24 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 
 # --- VARIABLES ---
 # Load variables
-source $PWD/info.env
+source $WORKDIR/info.env
 
 # Check if certain vars are overwritten, set them if missing
 if [ "${NAME}" = "" ]; then
-    NAME="$(basename $PWD)"
+    NAME="$(basename $WORKDIR)"
 fi
 export NAME
 printf "Name: ${NAME}\n"
 
+repositoryFolder="$WORKDIR/.build/repository"
 
 # --- SOURCES ---
-alias git="git -C .build/repository"
 # Get sources locally
-if ! [ -d .build/repository ]; then
-    git clone "${GIT_REPOSITORY}" .build/repository
-else
-    git checkout -  # Checkout previous branch in case GIT_CHECKOUT was different
+if ! [ -d "$repositoryFolder" ]; then
+    git clone "${GIT_REPOSITORY}" "$repositoryFolder"
+    cloned=True
+fi
+
+# Change into repository
+cd "$repositoryFolder"
+
+if [ "$cloned" != True ]; then
+    # Checkout default-branch in case GIT_CHECKOUT was different    
+    defaultBranch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+    git checkout "${defaultBranch}"     
+
     git pull        # Get changes
 fi
 
@@ -42,5 +51,5 @@ fi
 export VERSION
 printf "Version: ${VERSION}\n"
 
-TAG=${TAG:-"${TAG_PREFIX}${NAME}"}
+TAG=${TAG:-"${TAGPREFIX}${NAME}"}
 printf "> ${TAG}\n"
