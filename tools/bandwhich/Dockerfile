@@ -1,5 +1,5 @@
 # ---- Base ----
-FROM alpine:3 AS base
+FROM debian:stable-slim AS base
 WORKDIR /app
 
 
