@@ -62,9 +62,17 @@ https://github.com/imsnif/bandwhich
 
 ### 2.1.2. Example
 ```
-docker run -it --net host bandwhich -i eth0
+docker run --rm -v /proc:/proc ghcr.io/ruakij/dockerbuilds/bandwhich:latest -n -i eth0
 ```
 
+|||
+-|-
+`--rm` *            | Removes the container when its stopped  
+`-v /proc:/proc` *  | Makes Process identification from host-processes possible  
+`-n` *              | Dont resolve IPs  
+`-i eth0` *         | Only check on eth0 interface
+
+*\* is Optional*
 <br>
 
 ## 2.2. auto-editor
