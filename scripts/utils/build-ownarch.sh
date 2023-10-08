@@ -1,7 +1,6 @@
 #!/bin/bash
 
 docker build \
---tag $TAG:latest \
---tag $TAG:$VERSION \
-$EXTRA_ARGS \
-"$WORKDIR"
+    $TAGS_ARG \
+    $EXTRA_ARGS \
+    "$WORKDIR"
