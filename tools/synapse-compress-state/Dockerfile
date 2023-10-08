@@ -29,4 +29,4 @@ FROM base AS release
 COPY --from=build-synapse_compress-state /build/target/release/synapse_compress_state .
 COPY --from=build-synapse_auto_compressor /build/target/release/synapse_auto_compressor .
 
-ENTRYPOINT ["./synapse_compress_state"]
+ENTRYPOINT ["./synapse_auto_compressor"]
