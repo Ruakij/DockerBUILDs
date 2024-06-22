@@ -4,14 +4,12 @@ WORKDIR /app
 
 
 # ---- Build ----
-FROM rust:1.65.0-slim AS build
+FROM rust:1.79.0-slim AS build
 WORKDIR /build
-# Install packages
-RUN apt update && apt install -y make
 # Copy sources
 ADD .build/repository/ .
-# Update dependencies and Compile
-RUN cargo update && TARGET="release" make
+# Compile
+RUN cargo build --release
 
 
 # ---- Release ----
