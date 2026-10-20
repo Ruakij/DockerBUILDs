@@ -1,0 +1,91 @@
+# Tests the bandwhich image on every change and publishes it from the default branch.
+#
+# The test job runs the upstream binary and holds a read-only token; only the publish
+# job can write packages. A dispatched run on any other branch only tests.
+name: bandwhich-build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/bandwhich/**
+      - .github/workflows/bandwhich-build.yaml
+  pull_request:
+    paths:
+      - tools/bandwhich/**
+      - .github/workflows/bandwhich-build.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: bandwhich-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/ruakij/bandwhich
+  CONTEXT: tools/bandwhich
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - id: version
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^ARG BANDWHICH_VERSION=//p' "${CONTEXT}/Dockerfile")
+          [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.CONTEXT }}
+          platforms: linux/amd64
+          load: true
+          tags: bandwhich:test
+
+      - env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          output=$(docker run --rm bandwhich:test --version)
+          echo "${output}"
+          [ "${output}" = "bandwhich ${VERSION}" ]
+
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.CONTEXT }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ needs.test.outputs.version }}
+            ${{ env.IMAGE }}:latest
