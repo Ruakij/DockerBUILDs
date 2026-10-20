@@ -60,14 +60,29 @@ https://github.com/imsnif/bandwhich
 
 <br>
 
-### 2.1.2. Example
+### 2.1.2. Image
+`ghcr.io/ruakij/bandwhich`, tags `<version>` (e.g. `0.23.1`) and `latest`, for `linux/amd64`, `linux/arm64` and `linux/arm/v7`.
+
+The image contains the static musl release binary of the pinned upstream version, verified by sha256 during the build. It is built by `.github/workflows/bandwhich-build.yaml` on changes to `tools/bandwhich/` on `main` and on manual dispatch.
+
+`.github/workflows/bandwhich-upstream-sync.yaml` checks daily for a new upstream release and opens a PR that bumps the version and checksums in `tools/bandwhich/Dockerfile`. Dependabot bumps the base image.
+
+Local build (`scripts/build.sh` is not used for this tool):
 ```
-docker run --rm -v /proc:/proc ghcr.io/ruakij/dockerbuilds/bandwhich:latest -n -i eth0
+docker build -t bandwhich tools/bandwhich
+```
+
+<br>
+
+### 2.1.3. Example
+```
+docker run --rm -it --net host -v /proc:/proc ghcr.io/ruakij/bandwhich:latest -n -i eth0
 ```
 
 |||
 -|-
 `--rm` *            | Removes the container when its stopped  
+`--net host` *      | Shows the traffic of the host instead of the container  
 `-v /proc:/proc` *  | Makes Process identification from host-processes possible  
 `-n` *              | Dont resolve IPs  
 `-i eth0` *         | Only check on eth0 interface

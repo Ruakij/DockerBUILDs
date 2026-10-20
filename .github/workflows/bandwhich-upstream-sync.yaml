@@ -1,0 +1,120 @@
+# Opens a PR when imsnif/bandwhich publishes a release newer than the one pinned in
+# tools/bandwhich/Dockerfile. The PR carries the new version and the sha256 of each
+# release archive; bandwhich-build.yaml then builds it and runs the new binary.
+#
+# This workflow never runs upstream code. The detect job only downloads the archives
+# to hash them, with a read-only token. Only the pull-request job holds the key.
+#
+# Events caused by GITHUB_TOKEN start no workflows. AUTOMATION_SSH_KEY is an optional
+# repository secret holding the private half of a deploy key with write access; the
+# branch is pushed over SSH with it, so pushes to an open PR run bandwhich-build.yaml.
+# Opening the PR is still a GITHUB_TOKEN event, so a new PR gets its checks from a
+# dispatched run on its branch, as workflow_dispatch is the exception to that rule.
+name: bandwhich-upstream-sync
+
+on:
+  schedule:
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: bandwhich-upstream-sync
+  cancel-in-progress: true
+
+env:
+  DOCKERFILE: tools/bandwhich/Dockerfile
+  BRANCH: automation/bandwhich-version-sync
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.detect.outputs.changed }}
+      current: ${{ steps.detect.outputs.current }}
+      latest: ${{ steps.detect.outputs.latest }}
+      sha256_amd64: ${{ steps.detect.outputs.sha256_amd64 }}
+      sha256_arm64: ${{ steps.detect.outputs.sha256_arm64 }}
+      sha256_armv7: ${{ steps.detect.outputs.sha256_armv7 }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          current=$(sed -n 's/^ARG BANDWHICH_VERSION=//p' "${DOCKERFILE}")
+          tag=$(gh release view --repo imsnif/bandwhich --json tagName -q .tagName)
+          latest="${tag#v}"
+          semver='^[0-9]+\.[0-9]+\.[0-9]+$'
+          [[ "${current}" =~ ${semver} && "${latest}" =~ ${semver} ]]
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+          if [ "${current}" = "${latest}" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          dir=$(mktemp -d)
+          for pair in amd64:x86_64-unknown-linux-musl arm64:aarch64-unknown-linux-musl armv7:armv7-unknown-linux-musleabihf; do
+            arch="${pair%%:*}"
+            file="bandwhich-v${latest}-${pair#*:}.tar.gz"
+            curl -fsSL -o "${dir}/${file}" "https://github.com/imsnif/bandwhich/releases/download/v${latest}/${file}"
+            sum=$(sha256sum "${dir}/${file}" | cut -d' ' -f1)
+            echo "sha256_${arch}=${sum}" >> "$GITHUB_OUTPUT"
+          done
+
+  pull-request:
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ssh-key: ${{ secrets.AUTOMATION_SSH_KEY }}
+
+      - env:
+          VERSION: ${{ needs.detect.outputs.latest }}
+          SHA256_AMD64: ${{ needs.detect.outputs.sha256_amd64 }}
+          SHA256_ARM64: ${{ needs.detect.outputs.sha256_arm64 }}
+          SHA256_ARMV7: ${{ needs.detect.outputs.sha256_armv7 }}
+        run: |
+          set -euo pipefail
+          sed -i \
+            -e "s/^ARG BANDWHICH_VERSION=.*/ARG BANDWHICH_VERSION=${VERSION}/" \
+            -e "s/^ARG SHA256_AMD64=.*/ARG SHA256_AMD64=${SHA256_AMD64}/" \
+            -e "s/^ARG SHA256_ARM64=.*/ARG SHA256_ARM64=${SHA256_ARM64}/" \
+            -e "s/^ARG SHA256_ARMV7=.*/ARG SHA256_ARMV7=${SHA256_ARMV7}/" \
+            "${DOCKERFILE}"
+
+      - id: pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: ${{ env.BRANCH }}
+          delete-branch: true
+          commit-message: "Bump bandwhich to ${{ needs.detect.outputs.latest }}"
+          title: "Bump bandwhich to ${{ needs.detect.outputs.latest }}"
+          body: |
+            Automated bandwhich upstream sync.
+
+            - Previous: `${{ needs.detect.outputs.current }}`
+            - New: `${{ needs.detect.outputs.latest }}`
+
+            The sha256 values are computed from the downloaded release archives, as
+            upstream publishes no checksums. Check them against the release page before
+            merging. The bandwhich-build run on this PR starts the new binary.
+
+      - if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run bandwhich-build.yaml --ref "${BRANCH}"
