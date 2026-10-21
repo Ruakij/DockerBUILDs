@@ -3,13 +3,11 @@
 # release archive; bandwhich-build.yaml then builds it and runs the new binary.
 #
 # This workflow never runs upstream code. The detect job only downloads the archives
-# to hash them, with a read-only token. Only the pull-request job holds the key.
+# to hash them, with a read-only token. Only the pull-request job can write.
 #
-# Events caused by GITHUB_TOKEN start no workflows. AUTOMATION_SSH_KEY is an optional
-# repository secret holding the private half of a deploy key with write access; the
-# branch is pushed over SSH with it, so pushes to an open PR run bandwhich-build.yaml.
-# Opening the PR is still a GITHUB_TOKEN event, so a new PR gets its checks from a
-# dispatched run on its branch, as workflow_dispatch is the exception to that rule.
+# Events caused by GITHUB_TOKEN start no workflows, except workflow_dispatch. After
+# every push to the PR branch the PR job therefore dispatches bandwhich-build.yaml on
+# that branch; the run attaches its checks to the PR head commit.
 name: bandwhich-upstream-sync
 
 on:
@@ -81,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ssh-key: ${{ secrets.AUTOMATION_SSH_KEY }}
+          persist-credentials: false
 
       - env:
           VERSION: ${{ needs.detect.outputs.latest }}
@@ -114,7 +112,16 @@ jobs:
             upstream publishes no checksums. Check them against the release page before
             merging. The bandwhich-build run on this PR starts the new binary.
 
-      - if: steps.pr.outputs.pull-request-operation == 'created'
+      # A push or a new PR starts no CI, so dispatch it. An unchanged branch gets a run
+      # only when none exists for its head yet, which retries a lost dispatch.
+      - if: steps.pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run bandwhich-build.yaml --ref "${BRANCH}"
+          OPERATION: ${{ steps.pr.outputs.pull-request-operation }}
+          SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
+        run: |
+          set -euo pipefail
+          if [ "${OPERATION}" = none ] && [ "$(gh run list --workflow bandwhich-build.yaml --commit "${SHA}" --json databaseId -q length)" != 0 ]; then
+            exit 0
+          fi
+          gh workflow run bandwhich-build.yaml --ref "${BRANCH}"
