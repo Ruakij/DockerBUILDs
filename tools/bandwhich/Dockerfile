@@ -11,7 +11,7 @@ ARG TARGETVARIANT
 
 
 # ---- Download, one stage per architecture; only the one matching the target is built ----
-FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:a717a33469731894e77e912ea7d714e27c2dc38ee6554fd1a3102e92999cfc66 AS download-base
+FROM --platform=$BUILDPLATFORM debian:stable-slim@sha256:13e0a2e78aa0554ad5ff66e4e260c6dbcdff807eb1f39d43b9fb0288aae88b04 AS download-base
 RUN mkdir /out
 
 FROM download-base AS download-amd64
@@ -37,7 +37,7 @@ RUN tar -xzf /tmp/bandwhich.tar.gz -C /out bandwhich
 
 
 # ---- Release ----
-FROM debian:stable-slim@sha256:a717a33469731894e77e912ea7d714e27c2dc38ee6554fd1a3102e92999cfc66 AS release
+FROM debian:stable-slim@sha256:13e0a2e78aa0554ad5ff66e4e260c6dbcdff807eb1f39d43b9fb0288aae88b04 AS release
 ARG BANDWHICH_VERSION
 LABEL org.opencontainers.image.title="bandwhich" \
       org.opencontainers.image.description="Terminal bandwidth utilization tool, packaged upstream release binary" \
